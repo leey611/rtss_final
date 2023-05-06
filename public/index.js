@@ -18,6 +18,7 @@ let windowHalfY = window.innerHeight / 2;
 let water;
 const clock = new THREE.Clock();
 const gui = new GUI();
+let shouldAutoForward = false
 
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -136,7 +137,7 @@ function init() {
   // controls
 
   controls = new FirstPersonControls(camera, renderer.domElement);
-  //   controls = new OrbitControls(camera, renderer.domElement);
+     //controls = new OrbitControls(camera, renderer.domElement);
 
   //controls.listenToKeyEvents(window); // optional
 
@@ -153,7 +154,7 @@ function init() {
   //controls.maxPolarAngle = Math.PI / 2;
   //controls.constrainVertical = [0,0]
   //controls.lookAt(0,0,0)
-  controls.autoForward = true;
+  // controls.autoForward = true;
   controls.movementSpeed = 10;
   controls.constrainVertical = true;
   controls.verticalMax = Math.PI / 2;
@@ -207,6 +208,9 @@ function init() {
 
   window.addEventListener("resize", onWindowResize);
   document.addEventListener("mousemove", onDocumentMouseMove, false);
+  document.addEventListener('click', () => {
+    shouldAutoForward = !shouldAutoForward
+  })
 }
 
 function onWindowResize() {
@@ -217,13 +221,18 @@ function onWindowResize() {
 }
 
 function onDocumentMouseMove(event) {
-  console.log("move");
   mouseX = (event.clientX - windowHalfX) * 0.25;
   mouseY = (event.clientY - windowHalfY) * 0.15;
 }
+
 function animate() {
   requestAnimationFrame(animate);
+  //console.log('control',controls.object.position.distanceTo(new THREE.Vector3(0,20,400)))
+  //console.log('camera', camera.position)
+  controls.autoForward = shouldAutoForward
 
+ 
+  
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
 
