@@ -8,6 +8,7 @@ import { FlyControls } from "three/addons/controls/FlyControls.js";
 import { FirstPersonControls } from "three/addons/controls/FirstPersonControls.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { Water } from "three/addons/objects/Water.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 let camera, controls, scene, renderer;
 let mouseX = 0,
@@ -116,6 +117,21 @@ function addWater() {
   folderWater.open();
 }
 
+function loadModel(url) {
+  return new Promise((resolve, reject) => {
+    new GLTFLoader().load(
+      url,
+      (gltf) => {
+        resolve(gltf.scene);
+      },
+      undefined,
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+}
+
 function init() {
   scene = new THREE.Scene();
   //   scene.background = new THREE.Color(0xcccccc);
@@ -167,6 +183,44 @@ function init() {
   addWireframe();
   addTerrain();
   addWater();
+
+  loadModel("/assets/models/jellyfish.glb")
+    .then((object) => {
+      const amount = 600;
+
+      const mesh1 = object.getObjectByName("Object_6");
+      const geo1 = mesh1.geometry.clone();
+      const mat1 = mesh1.material;
+      const jelly1 = new THREE.InstancedMesh(geo1, mat1, amount);
+      scene.add(jelly1);
+
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < amount; i++) {
+        dummy.position.x = Math.random() * 1000;
+        dummy.position.y = Math.random() * 1000;
+        dummy.position.z = Math.random() * 1000;
+
+        dummy.rotation.x = Math.random() * 2 * Math.PI;
+        dummy.rotation.y = Math.random() * 2 * Math.PI;
+        dummy.rotation.z = Math.random() * 2 * Math.PI;
+
+        dummy.scale.x = dummy.scale.y = dummy.scale.z = Math.random() * 2;
+
+        dummy.updateMatrix();
+        jelly1.setMatrixAt(i, dummy.matrix);
+      }
+
+      // const mesh = object.getObjectByName("Sketchfab_Scene");
+      // object.traverse((child) => {
+      //   if (child.isMesh) {
+      //     console.log(child);
+      //     // console.log(child.geometry);
+      //     // console.log(child.material);
+      //   }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 
   //   const geometry = new THREE.CylinderGeometry(0, 10, 30, 4, 1);
   //   const material = new THREE.MeshPhongMaterial({
