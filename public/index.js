@@ -265,6 +265,10 @@ function init() {
   document.addEventListener('click', () => {
     shouldAutoForward = !shouldAutoForward
   })
+  document.getElementById('close_modal').addEventListener('click', () => {
+    document.getElementById('instruction_modal').style.display = 'none'
+  })
+
 }
 
 function onWindowResize() {
