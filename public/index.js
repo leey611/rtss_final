@@ -223,43 +223,6 @@ function init() {
 
   loadBGM()
 
-  // loadModel("/assets/models/jellyfish.glb")
-  //   .then((object) => {
-  //     const amount = 600;
-
-  //     const mesh1 = object.getObjectByName("Object_6");
-  //     const geo1 = mesh1.geometry.clone();
-  //     const mat1 = mesh1.material;
-  //     const jelly1 = new THREE.InstancedMesh(geo1, mat1, amount);
-  //     scene.add(jelly1);
-
-  //     const dummy = new THREE.Object3D();
-  //     for (let i = 0; i < amount; i++) {
-  //       dummy.position.x = Math.random() * 1000;
-  //       dummy.position.y = Math.random() * 1000;
-  //       dummy.position.z = Math.random() * 1000;
-
-  //       dummy.rotation.x = Math.random() * 2 * Math.PI;
-  //       dummy.rotation.y = Math.random() * 2 * Math.PI;
-  //       dummy.rotation.z = Math.random() * 2 * Math.PI;
-
-  //       dummy.scale.x = dummy.scale.y = dummy.scale.z = Math.random() * 2;
-
-  //       dummy.updateMatrix();
-  //       jelly1.setMatrixAt(i, dummy.matrix);
-  //     }
-
-  //     // const mesh = object.getObjectByName("Sketchfab_Scene");
-  //     // object.traverse((child) => {
-  //     //   if (child.isMesh) {
-  //     //     console.log(child);
-  //     //     // console.log(child.geometry);
-  //     //     // console.log(child.material);
-  //     //   }
-  //   })
-  //   .catch((error) => {
-  //     console.log(error);
-  //   });
 
   // addWater();
 
