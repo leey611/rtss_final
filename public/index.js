@@ -21,9 +21,26 @@ const clock = new THREE.Clock();
 const gui = new GUI();
 let shouldAutoForward = false
 
+let context
+let contextResume = false
+window.onload = function() {
+  context = new AudioContext()
+}
+const listener = new THREE.AudioListener()
+const audioLoader = new THREE.AudioLoader()
+const bgm = new THREE.Audio(listener)
+
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
 animate();
+
+function loadBGM() {
+  audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
+    bgm.setBuffer(buffer)
+    bgm.setLoop(true)
+    bgm.setVolume(0.5)
+  })
+}
 
 function addWireframe() {
   const geometry = new THREE.SphereGeometry(500, 100, 100);
@@ -149,7 +166,7 @@ function init() {
     1000
   );
   camera.position.set(0, 20, 400);
-
+  camera.add(listener)
   // controls
 
   controls = new FirstPersonControls(camera, renderer.domElement);
@@ -183,6 +200,8 @@ function init() {
   addWireframe();
   addTerrain();
   addWater();
+
+  loadBGM()
 
   loadModel("/assets/models/jellyfish.glb")
     .then((object) => {
@@ -222,21 +241,7 @@ function init() {
       console.log(error);
     });
 
-  //   const geometry = new THREE.CylinderGeometry(0, 10, 30, 4, 1);
-  //   const material = new THREE.MeshPhongMaterial({
-  //     color: 0xffffff,
-  //     flatShading: true,
-  //   });
 
-  //   for (let i = 0; i < 500; i++) {
-  //     const mesh = new THREE.Mesh(geometry, material);
-  //     mesh.position.x = Math.random() * 1600 - 800;
-  //     mesh.position.y = 0;
-  //     mesh.position.z = Math.random() * 1600 - 800;
-  //     mesh.updateMatrix();
-  //     mesh.matrixAutoUpdate = false;
-  //     scene.add(mesh);
-  //   }
 
   // lights
 
@@ -264,6 +269,10 @@ function init() {
   document.addEventListener("mousemove", onDocumentMouseMove, false);
   document.addEventListener('click', () => {
     shouldAutoForward = !shouldAutoForward
+    if (!contextResume) {
+      context.resume().then(() => bgm.play())
+      contextResume = true
+    }
   })
   document.getElementById('close_modal').addEventListener('click', () => {
     document.getElementById('instruction_modal').style.display = 'none'
