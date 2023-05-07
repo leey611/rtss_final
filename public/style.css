@@ -1,3 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+
 * {
     margin: 0;
+}
+
+#instruction_modal {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    /* padding: 1rem 2rem; */
+    border: 5px ridge #7fff00;
+    border-radius: 20px;
+}
+
+#modal_title {
+    background-color: blue;
+    color: #fff;
+    font-size: 1.3rem;
+    font-family: 'Orbitron', sans-serif;
+    border-bottom: 5px ridge #7fff00;
+    border-top-right-radius: 15px;
+    border-top-left-radius: 15px;
+    padding: 0.1rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#close_modal {
+    color: #ff1493;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+#instruction {
+    background: #f0f0f0;
+    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: 15px;
+    color: blue;
+    font-family: 'Space Mono', monospace;
+    padding: 1rem 1rem;
+    text-align: center;
+    font-size: 1.3rem;
+    /* margin-top: 1rem; */
 }
