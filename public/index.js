@@ -8,7 +8,7 @@ import { FlyControls } from "three/addons/controls/FlyControls.js";
 import { FirstPersonControls } from "three/addons/controls/FirstPersonControls.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { Water } from "three/addons/objects/Water.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { SeaCreature } from "/seacreature.js";
 
 let camera, controls, scene, renderer;
 let mouseX = 0,
@@ -19,7 +19,8 @@ let windowHalfY = window.innerHeight / 2;
 let water;
 const clock = new THREE.Clock();
 const gui = new GUI();
-let shouldAutoForward = false
+let shouldAutoForward = false;
+let jellyfish, squid, starfish;
 
 let context
 let contextResume = false
@@ -43,7 +44,13 @@ function loadBGM() {
 }
 
 function addWireframe() {
-  const geometry = new THREE.SphereGeometry(500, 100, 100);
+  const geometry = new THREE.SphereGeometry(1000, 100, 100);
+  const material = new THREE.MeshBasicMaterial({
+    // color: 0xd3d3d3,
+    side: THREE.BackSide,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
 
   const wireframe = new THREE.WireframeGeometry(geometry);
 
@@ -51,14 +58,33 @@ function addWireframe() {
   line.material.depthTest = false;
   line.material.opacity = 0.5;
   line.material.transparent = false;
+  // line.material.color = 0x000000;
 
   scene.add(line);
+
+  var params = {
+    fillColor: 0xd3d3d3,
+    lineColor: 0x000000,
+  };
 
   const wireframeFolder = gui.addFolder("wireframe");
   wireframeFolder.add(line.material, "depthTest", "switch").name("depthTest");
   wireframeFolder
     .add(line.material, "transparent", "switch")
     .name("transparent");
+  wireframeFolder
+    .addColor(params, "fillColor")
+    .name("fill color")
+    .onChange(() => {
+      material.color.set(params.fillColor);
+    });
+  wireframeFolder
+    .addColor(params, "lineColor")
+    .name("line color")
+    .onChange(() => {
+      line.material.color.set(params.lineColor);
+    });
+
   wireframeFolder.open();
 }
 
@@ -81,7 +107,7 @@ function addTerrain() {
         side: THREE.DoubleSide,
         map: textures[0],
         displacementMap: textures[1],
-        displacementScale: 30,
+        displacementScale: 100,
         // displacementBias: 0.01,
         // bumpMap: coralBump, // if there is a normal map this will be ignored
         // bumpScale: 3,
@@ -90,7 +116,7 @@ function addTerrain() {
       });
       const terrain = new THREE.Mesh(terraingeo, terrainmat);
       scene.add(terrain);
-      terrain.position.set(0, 0, 0);
+      terrain.position.set(0, -50, 0);
       terrain.rotateX(-Math.PI / 2);
 
       //   const terrainmatUniforms = terrainmat.uniforms;
@@ -107,10 +133,18 @@ function addTerrain() {
 }
 
 function addWater() {
-  const waterSize = 1500;
-  let waterGeo = new THREE.PlaneGeometry(waterSize, waterSize);
-  let waterMat = loadTexture("/assets/waternormals.jpg");
+  const waterSize = 500;
+  const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize);
+  const waterMat = loadTexture("/assets/waternormals.jpg");
   waterMat.wrapS = waterMat.wrapT = THREE.RepeatWrapping;
+
+  const dummy = new THREE.Mesh(
+    waterGeo,
+    new THREE.MeshBasicMaterial({ color: 0x00ffe4, side: THREE.FrontSide })
+  );
+  scene.add(dummy);
+  dummy.position.set(0, 400, 0);
+  dummy.rotation.x = -Math.PI / 2;
 
   water = new Water(waterGeo, {
     textureWidth: 512,
@@ -121,7 +155,7 @@ function addWater() {
     distortionScale: 3.7,
   });
   water.rotation.x = Math.PI / 2;
-  water.position.set(0, 200, 0);
+  water.position.set(0, 500, 0);
   scene.add(water);
 
   const waterUniforms = water.material.uniforms;
@@ -132,21 +166,6 @@ function addWater() {
   folderWater.add(waterUniforms.size, "value", 0.1, 10, 0.1).name("size");
   folderWater.add(water.position, "y", 1, 1000).name("y position");
   folderWater.open();
-}
-
-function loadModel(url) {
-  return new Promise((resolve, reject) => {
-    new GLTFLoader().load(
-      url,
-      (gltf) => {
-        resolve(gltf.scene);
-      },
-      undefined,
-      (error) => {
-        reject(error);
-      }
-    );
-  });
 }
 
 function init() {
@@ -169,8 +188,8 @@ function init() {
   camera.add(listener)
   // controls
 
-  controls = new FirstPersonControls(camera, renderer.domElement);
-     //controls = new OrbitControls(camera, renderer.domElement);
+  // controls = new FirstPersonControls(camera, renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
 
   //controls.listenToKeyEvents(window); // optional
 
@@ -199,6 +218,7 @@ function init() {
 
   addWireframe();
   addTerrain();
+
   addWater();
 
   loadBGM()
@@ -241,12 +261,40 @@ function init() {
       console.log(error);
     });
 
+  // addWater();
+
+  // sea creatures
+
+  jellyfish = new SeaCreature(
+    scene,
+    "/assets/models/jellyfish.glb",
+    "Object_6",
+    100
+  );
+  // jellyfish.init(-500, 500, -500, 500, -500, 500, 2, 2, 2, 1, 20);
+  // jellyfish.init(500, Math.PI * 2, 2, 2, 2, 1, 20);
+  jellyfish.init(750, 2, 2, 2, 1, 20);
+
+  squid = new SeaCreature(scene, "/assets/models/squid.glb", "Object_4", 100);
+  // squid.init(-500, 500, -500, 500, -500, 500, 2, 2, 2, 1, 10);
+  squid.init(750, 2, 2, 2, 1, 10);
+
+  starfish = new SeaCreature(
+    scene,
+    "/assets/models/starfish.glb",
+    "Object_2",
+    25
+  );
+  // starfish.init(-500, 500, 0, 10, -500, 500, -0.5, 0, 2, 0.5, 1);
+  starfish.init(750, -0.5, 0, 2, 0.5, 1);
+
+
 
 
   // lights
 
   const dirLight1 = new THREE.DirectionalLight(0xffffff, 2);
-  dirLight1.position.set(0, 800, 0);
+  dirLight1.position.set(0, 470, 0);
   scene.add(dirLight1);
 
   //   const dirLight2 = new THREE.DirectionalLight(0x002288);
@@ -255,9 +303,9 @@ function init() {
 
   const dirLightFolder = gui.addFolder("directional light");
   dirLightFolder.add(dirLight1, "intensity", 0, 10).name("intensity");
-  dirLightFolder.add(dirLight1.position, "x", -500, 500).name("x position");
-  dirLightFolder.add(dirLight1.position, "y", -500, 500).name("y position");
-  dirLightFolder.add(dirLight1.position, "z", -500, 500).name("z position");
+  dirLightFolder.add(dirLight1.position, "x", 0, 1500).name("x position");
+  dirLightFolder.add(dirLight1.position, "y", 0, 1500).name("y position");
+  dirLightFolder.add(dirLight1.position, "z", 0, 1500).name("z position");
   dirLightFolder.open();
 
   const ambientLight = new THREE.AmbientLight(0x222222);
@@ -267,6 +315,7 @@ function init() {
 
   window.addEventListener("resize", onWindowResize);
   document.addEventListener("mousemove", onDocumentMouseMove, false);
+
   document.addEventListener('click', () => {
     shouldAutoForward = !shouldAutoForward
     if (!contextResume) {
@@ -274,9 +323,11 @@ function init() {
       contextResume = true
     }
   })
+
   document.getElementById('close_modal').addEventListener('click', () => {
     document.getElementById('instruction_modal').style.display = 'none'
   })
+
 
 }
 
@@ -296,12 +347,12 @@ function animate() {
   requestAnimationFrame(animate);
   //console.log('control',controls.object.position.distanceTo(new THREE.Vector3(0,20,400)))
   //console.log('camera', camera.position)
-  controls.autoForward = shouldAutoForward
+  controls.autoForward = shouldAutoForward;
 
- 
-  
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
+
+  jellyfish.update(0.1, 0, 0, 0, 0, 0);
 
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
@@ -313,4 +364,10 @@ function render() {
   const delta = clock.getDelta();
   controls.update(delta);
   renderer.render(scene, camera);
+}
+
+function getRandom(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
 }
