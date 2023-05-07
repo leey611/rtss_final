@@ -1,5 +1,6 @@
-let socket = io();
-console.log(socket);
+let socket
+
+
 
 import * as THREE from "three";
 
@@ -8,6 +9,8 @@ import { FlyControls } from "three/addons/controls/FlyControls.js";
 import { FirstPersonControls } from "three/addons/controls/FirstPersonControls.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { Water } from "three/addons/objects/Water.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { User } from "./user.js"
 import { SeaCreature } from "/seacreature.js";
 
 let camera, controls, scene, renderer;
@@ -22,9 +25,36 @@ const gui = new GUI();
 let shouldAutoForward = false;
 let jellyfish, squid, starfish;
 
+let context
+let contextResume = false
+window.onload = function() {
+  context = new AudioContext()
+}
+const listener = new THREE.AudioListener()
+const audioLoader = new THREE.AudioLoader()
+const bgm = new THREE.Audio(listener)
+
+let user
+
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
 animate();
+
+function makeSocketUser() {
+  socket = io();
+  io.connect()
+  socket.on('connect', () => {
+    user = new User(camera.position.x, camera.position.y, camera.position.z-20, scene, socket.id)
+  })
+}
+
+function loadBGM() {
+  audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
+    bgm.setBuffer(buffer)
+    bgm.setLoop(true)
+    bgm.setVolume(0.5)
+  })
+}
 
 function addWireframe() {
   const geometry = new THREE.SphereGeometry(1000, 100, 100);
@@ -151,7 +181,22 @@ function addWater() {
   folderWater.open();
 }
 
-function init() {
+function loadModel(url) {
+  return new Promise((resolve, reject) => {
+    new GLTFLoader().load(
+      url,
+      (gltf) => {
+        resolve(gltf.scene);
+      },
+      undefined,
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+}
+
+async function init() {
   scene = new THREE.Scene();
   //   scene.background = new THREE.Color(0xcccccc);
   //   scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
@@ -168,11 +213,12 @@ function init() {
     1000
   );
   camera.position.set(0, 20, 400);
-
+  camera.add(listener)
   // controls
+  controls = new FirstPersonControls(camera, renderer.domElement);
+     //controls = new OrbitControls(camera, renderer.domElement);
 
   // controls = new FirstPersonControls(camera, renderer.domElement);
-  controls = new OrbitControls(camera, renderer.domElement);
 
   //controls.listenToKeyEvents(window); // optional
 
@@ -201,6 +247,12 @@ function init() {
 
   addWireframe();
   addTerrain();
+
+  addWater();
+
+  loadBGM()
+
+
   // addWater();
 
   // sea creatures
@@ -228,21 +280,8 @@ function init() {
   // starfish.init(-500, 500, 0, 10, -500, 500, -0.5, 0, 2, 0.5, 1);
   starfish.init(750, -0.5, 0, 2, 0.5, 1);
 
-  //   const geometry = new THREE.CylinderGeometry(0, 10, 30, 4, 1);
-  //   const material = new THREE.MeshPhongMaterial({
-  //     color: 0xffffff,
-  //     flatShading: true,
-  //   });
 
-  //   for (let i = 0; i < 500; i++) {
-  //     const mesh = new THREE.Mesh(geometry, material);
-  //     mesh.position.x = Math.random() * 1600 - 800;
-  //     mesh.position.y = 0;
-  //     mesh.position.z = Math.random() * 1600 - 800;
-  //     mesh.updateMatrix();
-  //     mesh.matrixAutoUpdate = false;
-  //     scene.add(mesh);
-  //   }
+
 
   // lights
 
@@ -269,13 +308,21 @@ function init() {
   window.addEventListener("resize", onWindowResize);
   document.addEventListener("mousemove", onDocumentMouseMove, false);
 
-  document.addEventListener("click", () => {
-    shouldAutoForward = !shouldAutoForward;
-  });
+  document.addEventListener('click', () => {
+    shouldAutoForward = !shouldAutoForward
+    if (!contextResume) {
+      //context.resume().then(() => bgm.play())
+      contextResume = true
+    }
+  })
 
-  document.getElementById("close_modal").addEventListener("click", () => {
-    document.getElementById("instruction_modal").style.display = "none";
-  });
+
+  document.getElementById('close_modal').addEventListener('click', () => {
+    document.getElementById('instruction_modal').style.display = 'none'
+  })
+
+  await makeSocketUser()
+
 }
 
 function onWindowResize() {
@@ -296,17 +343,28 @@ function animate() {
   //console.log('camera', camera.position)
   controls.autoForward = shouldAutoForward;
 
+  //console.log('camera position',camera.position)
+  //console.log('control', controls.object.position)
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
+
   const now = Date.now() / 1000;
   // jellyfish.update(now, 0.1, 0, 0, 0, 0, 0);
   jellyfish.update(now, "rotate");
   squid.update(now, "bob");
   // no starfish update!
 
+  //cube.position.set(camera.position.x,camera.position.y, camera.position.z - 20)
+
+
+
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
   //camera.position.z -= 1//= - position + 8000;
+  if (user) {
+    user.update(camera.position.x, camera.position.y, camera.position.z)
+  }
+
   render();
 }
 
