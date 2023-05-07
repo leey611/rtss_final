@@ -268,9 +268,16 @@ function init() {
 
   window.addEventListener("resize", onWindowResize);
   document.addEventListener("mousemove", onDocumentMouseMove, false);
+
   document.addEventListener("click", () => {
     shouldAutoForward = !shouldAutoForward;
   });
+
+  document.getElementById('close_modal').addEventListener('click', () => {
+    document.getElementById('instruction_modal').style.display = 'none'
+  })
+
+
 }
 
 function onWindowResize() {
