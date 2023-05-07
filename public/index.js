@@ -9,12 +9,9 @@ import { FlyControls } from "three/addons/controls/FlyControls.js";
 import { FirstPersonControls } from "three/addons/controls/FirstPersonControls.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { Water } from "three/addons/objects/Water.js";
-<<<<<<< HEAD
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { User } from "./user.js"
-=======
 import { SeaCreature } from "/seacreature.js";
->>>>>>> dd3c1e7596a13d065efb283ba689ea8ca020dd2b
 
 let camera, controls, scene, renderer;
 let mouseX = 0,
@@ -184,7 +181,6 @@ function addWater() {
   folderWater.open();
 }
 
-<<<<<<< HEAD
 function loadModel(url) {
   return new Promise((resolve, reject) => {
     new GLTFLoader().load(
@@ -201,9 +197,6 @@ function loadModel(url) {
 }
 
 async function init() {
-=======
-function init() {
->>>>>>> dd3c1e7596a13d065efb283ba689ea8ca020dd2b
   scene = new THREE.Scene();
   //   scene.background = new THREE.Color(0xcccccc);
   //   scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
@@ -222,14 +215,10 @@ function init() {
   camera.position.set(0, 20, 400);
   camera.add(listener)
   // controls
-<<<<<<< HEAD
   controls = new FirstPersonControls(camera, renderer.domElement);
      //controls = new OrbitControls(camera, renderer.domElement);
-=======
 
   // controls = new FirstPersonControls(camera, renderer.domElement);
-  controls = new OrbitControls(camera, renderer.domElement);
->>>>>>> dd3c1e7596a13d065efb283ba689ea8ca020dd2b
 
   //controls.listenToKeyEvents(window); // optional
 
@@ -367,12 +356,9 @@ function init() {
   document.getElementById('close_modal').addEventListener('click', () => {
     document.getElementById('instruction_modal').style.display = 'none'
   })
-<<<<<<< HEAD
+
   await makeSocketUser()
-=======
 
-
->>>>>>> dd3c1e7596a13d065efb283ba689ea8ca020dd2b
 }
 
 function onWindowResize() {
@@ -393,19 +379,15 @@ function animate() {
   //console.log('camera', camera.position)
   controls.autoForward = shouldAutoForward;
 
-<<<<<<< HEAD
   //console.log('camera position',camera.position)
   //console.log('control', controls.object.position)
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
   //cube.position.set(camera.position.x,camera.position.y, camera.position.z - 20)
-=======
-  //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-  let position = ((Date.now() - start_time) * 0.03) % 8000;
+
 
   jellyfish.update(0.1, 0, 0, 0, 0, 0);
 
->>>>>>> dd3c1e7596a13d065efb283ba689ea8ca020dd2b
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
   //camera.position.z -= 1//= - position + 8000;
