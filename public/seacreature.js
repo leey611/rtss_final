@@ -8,8 +8,17 @@ export class SeaCreature {
     this.amount = amount;
     this.scene = scene;
 
-    this.currentInstance = 0;
+    // this.currentInstance = 0;
     this.instancesLoaded = false;
+
+    this.parent = new THREE.Object3D();
+    this.initialPosition = [];
+    this.direction = [];
+
+    for (let i = 0; i < this.amount; i++) {
+      this.direction[i] = 1;
+      // this.direction[i] = this.getRandomSign();
+    }
   }
 
   loadModel(path) {
@@ -51,48 +60,15 @@ export class SeaCreature {
     return { x, y, z };
   }
 
-  // getRandomCoordinatesInHemisphere(radius, hemisphereAngle) {
-  //   // Generate a random radius within the hemisphere
-  //   const randomRadius = Math.random() * radius;
-
-  //   // Generate a random azimuth angle (longitude)
-  //   const randomAzimuth = Math.random() * (2 * Math.PI);
-
-  //   // Generate a random inclination angle (latitude)
-  //   const randomInclination = Math.random() * hemisphereAngle;
-
-  //   // Convert spherical coordinates to Cartesian coordinates
-  //   const x =
-  //     randomRadius * Math.cos(randomAzimuth) * Math.sin(randomInclination);
-  //   const y =
-  //     randomRadius * Math.sin(randomAzimuth) * Math.sin(randomInclination);
-  //   const z = randomRadius * Math.cos(randomInclination);
-
-  //   return { x, y, z };
-  // }
-
-  init(
-    /* xL = 0,
-    xU = 0,
-    yL = 0,
-    yU = 0,
-    zL = 0,
-    zU = 0, */
-    radius,
-    // hemisphereAngle,
-    rotX = 0,
-    rotY = 0,
-    rotZ = 0,
-    sL = 0,
-    sU = 1
-  ) {
+  init(radius, rotX = 0, rotY = 0, rotZ = 0, sL = 0, sU = 1) {
     this.loadModel(this.url)
       .then((object) => {
         const origMesh = object.getObjectByName(this.objectName);
         const geo = origMesh.geometry.clone();
         const mat = origMesh.material;
         this.mesh = new THREE.InstancedMesh(geo, mat, this.amount);
-        this.scene.add(this.mesh);
+        this.parent.add(this.mesh);
+        this.scene.add(this.parent);
 
         this.dummy = new THREE.Object3D();
         for (let i = 0; i < this.amount; i++) {
@@ -103,26 +79,8 @@ export class SeaCreature {
           this.dummy.position.z =
             this.getRandomCoordinatesInHemisphere(radius).z;
 
-          /*
-          this.dummy.position.x = this.getRandomCoordinatesInHemisphere(
-            radius,
-            hemisphereAngle
-          ).x;
-          this.dummy.position.y = this.getRandomCoordinatesInHemisphere(
-            radius,
-            hemisphereAngle
-          ).y;
-          this.dummy.position.z = this.getRandomCoordinatesInHemisphere(
-            radius,
-            hemisphereAngle
-          ).z;
-          */
+          this.initialPosition[i] = this.dummy.position.clone();
 
-          /*
-          this.dummy.position.x = this.getRandom(xL, xU);
-          this.dummy.position.y = this.getRandom(yL, yU);
-          this.dummy.position.z = this.getRandom(zL, zU);
-          */
           this.dummy.rotation.x = Math.random() * rotX * Math.PI;
           this.dummy.rotation.y = Math.random() * rotY * Math.PI;
           this.dummy.rotation.z = Math.random() * rotZ * Math.PI;
@@ -133,29 +91,51 @@ export class SeaCreature {
               this.getRandom(sL, sU);
 
           this.dummy.updateMatrix();
-          this.mesh.setMatrixAt(this.currentInstance, this.dummy.matrix);
-          this.currentInstance += 1;
+          this.mesh.setMatrixAt(i, this.dummy.matrix);
+          // this.mesh.setMatrixAt(this.currentInstance, this.dummy.matrix);
+          // this.currentInstance += 1;
         }
         this.instancesLoaded = true;
+
+        setInterval(() => {
+          console.log(`this.dummy.position.y: ${this.dummy.position.y}`);
+          console.log(`this.position: ${this.initialPosition[0].y}`);
+          console.log(`this.direction: ${this.direction[0]}`);
+        }, 20000);
       })
       .catch((error) => {
         console.log(error);
       });
   }
 
-  update(
-    time,
-    posXq = 0,
-    posYq = 0,
-    posZq = 0,
-    rotXq = 0,
-    rotYq = 0,
-    rotZq = 0
-  ) {
+  rotateAnimation() {
     const matrix = new THREE.Matrix4();
-
     if (this.instancesLoaded) {
-      for (let i = 0; i < this.currentInstance; i++) {
+      for (let i = 0; i < this.amount; i++) {
+        this.mesh.getMatrixAt(i, matrix);
+        matrix.decompose(
+          this.dummy.position,
+          this.dummy.rotation,
+          this.dummy.scale
+        );
+        this.dummy.rotation.x += Math.random() * 0.005;
+        this.dummy.rotation.y += Math.random() * 0.005;
+        this.dummy.updateMatrix();
+        this.mesh.setMatrixAt(i, this.dummy.matrix);
+      }
+      this.mesh.instanceMatrix.needsUpdate = true;
+      this.parent.rotation.y += 0.001;
+    }
+  }
+
+  bobAnimation(time) {
+    if (this.instancesLoaded) {
+      const matrix = new THREE.Matrix4();
+      const speed = 0.001;
+      const range = 2;
+      // let direction = 1;
+
+      for (let i = 0; i < this.amount; i++) {
         this.mesh.getMatrixAt(i, matrix);
         matrix.decompose(
           this.dummy.position,
@@ -163,29 +143,39 @@ export class SeaCreature {
           this.dummy.scale
         );
 
-        this.dummy.position.x += Math.random() * posXq;
-        this.dummy.position.y += Math.random() * posYq;
-        this.dummy.position.z += Math.random() * posZq;
+        //   // const initialPosition = this.dummy.position.y;
+        //   // this.dummy.position.y =
+        //   //   initialPosition + Math.sin(time * speed) * range * this.direction[i];
 
-        this.dummy.rotation.x += Math.random() * rotXq;
-        this.dummy.rotation.y += Math.random() * rotYq;
-        this.dummy.rotation.z += Math.random() * rotZq;
+        this.dummy.position.y =
+          this.initialPosition[i].y +
+          Math.sin(time * speed) * range * this.direction[i];
 
-        // setInterval(() => {
-        //   console.log(this.dummy.rotation.z);
-        // }, 5000);
+        if (
+          this.dummy.position.y >= this.initialPosition[i].y + range ||
+          this.dummy.position.y <= this.initialPosition[i].y - range
+        ) {
+          this.direction[i] *= -1;
+        }
 
-        // if (this.dummy.position.y <= 0) {
-        //   this.dummy.position.y += Math.random() * speedQuotient * now;
-        // } else if (this.dummy.position.y >= 75) {
-        //   speedQuotient *= -1;
-        // }
-        // this.dummy.rotation.y += (i / instances) * now;
+        this.dummy.rotation.x += Math.random() * speed;
+        this.dummy.rotation.y += Math.random() * speed;
+        this.dummy.rotation.z += Math.random() * speed;
 
         this.dummy.updateMatrix();
         this.mesh.setMatrixAt(i, this.dummy.matrix);
       }
       this.mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
+
+  update(time, animation) {
+    if (animation === "rotate") {
+      this.rotateAnimation(time);
+    } else if (animation === "bob") {
+      this.bobAnimation(time);
+    } else {
+      console.warn(`Unknown animation type: ${animation}`);
     }
   }
 }

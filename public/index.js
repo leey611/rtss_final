@@ -299,8 +299,9 @@ function animate() {
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
   const now = Date.now() / 1000;
-  jellyfish.update(now, 0.1, 0, 0, 0, 0, 0);
-  // squid.update(now, 0.1, 0, 0, 0, 0, 0);
+  // jellyfish.update(now, 0.1, 0, 0, 0, 0, 0);
+  jellyfish.update(now, "rotate");
+  squid.update(now, "bob");
   // no starfish update!
 
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
@@ -313,10 +314,4 @@ function render() {
   const delta = clock.getDelta();
   controls.update(delta);
   renderer.render(scene, camera);
-}
-
-function getRandom(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
 }
