@@ -22,9 +22,26 @@ const gui = new GUI();
 let shouldAutoForward = false;
 let jellyfish, squid, starfish;
 
+let context
+let contextResume = false
+window.onload = function() {
+  context = new AudioContext()
+}
+const listener = new THREE.AudioListener()
+const audioLoader = new THREE.AudioLoader()
+const bgm = new THREE.Audio(listener)
+
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
 animate();
+
+function loadBGM() {
+  audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
+    bgm.setBuffer(buffer)
+    bgm.setLoop(true)
+    bgm.setVolume(0.5)
+  })
+}
 
 function addWireframe() {
   const geometry = new THREE.SphereGeometry(1000, 100, 100);
@@ -168,7 +185,7 @@ function init() {
     1000
   );
   camera.position.set(0, 20, 400);
-
+  camera.add(listener)
   // controls
 
   // controls = new FirstPersonControls(camera, renderer.domElement);
@@ -201,6 +218,49 @@ function init() {
 
   addWireframe();
   addTerrain();
+
+  addWater();
+
+  loadBGM()
+
+  loadModel("/assets/models/jellyfish.glb")
+    .then((object) => {
+      const amount = 600;
+
+      const mesh1 = object.getObjectByName("Object_6");
+      const geo1 = mesh1.geometry.clone();
+      const mat1 = mesh1.material;
+      const jelly1 = new THREE.InstancedMesh(geo1, mat1, amount);
+      scene.add(jelly1);
+
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < amount; i++) {
+        dummy.position.x = Math.random() * 1000;
+        dummy.position.y = Math.random() * 1000;
+        dummy.position.z = Math.random() * 1000;
+
+        dummy.rotation.x = Math.random() * 2 * Math.PI;
+        dummy.rotation.y = Math.random() * 2 * Math.PI;
+        dummy.rotation.z = Math.random() * 2 * Math.PI;
+
+        dummy.scale.x = dummy.scale.y = dummy.scale.z = Math.random() * 2;
+
+        dummy.updateMatrix();
+        jelly1.setMatrixAt(i, dummy.matrix);
+      }
+
+      // const mesh = object.getObjectByName("Sketchfab_Scene");
+      // object.traverse((child) => {
+      //   if (child.isMesh) {
+      //     console.log(child);
+      //     // console.log(child.geometry);
+      //     // console.log(child.material);
+      //   }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
   // addWater();
 
   // sea creatures
@@ -228,21 +288,8 @@ function init() {
   // starfish.init(-500, 500, 0, 10, -500, 500, -0.5, 0, 2, 0.5, 1);
   starfish.init(750, -0.5, 0, 2, 0.5, 1);
 
-  //   const geometry = new THREE.CylinderGeometry(0, 10, 30, 4, 1);
-  //   const material = new THREE.MeshPhongMaterial({
-  //     color: 0xffffff,
-  //     flatShading: true,
-  //   });
 
-  //   for (let i = 0; i < 500; i++) {
-  //     const mesh = new THREE.Mesh(geometry, material);
-  //     mesh.position.x = Math.random() * 1600 - 800;
-  //     mesh.position.y = 0;
-  //     mesh.position.z = Math.random() * 1600 - 800;
-  //     mesh.updateMatrix();
-  //     mesh.matrixAutoUpdate = false;
-  //     scene.add(mesh);
-  //   }
+
 
   // lights
 
@@ -269,9 +316,13 @@ function init() {
   window.addEventListener("resize", onWindowResize);
   document.addEventListener("mousemove", onDocumentMouseMove, false);
 
-  document.addEventListener("click", () => {
-    shouldAutoForward = !shouldAutoForward;
-  });
+  document.addEventListener('click', () => {
+    shouldAutoForward = !shouldAutoForward
+    if (!contextResume) {
+      context.resume().then(() => bgm.play())
+      contextResume = true
+    }
+  })
 
   document.getElementById('close_modal').addEventListener('click', () => {
     document.getElementById('instruction_modal').style.display = 'none'
