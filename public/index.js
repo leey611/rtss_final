@@ -1,5 +1,6 @@
-let socket = io();
-console.log(socket);
+let socket
+
+
 
 import * as THREE from "three";
 
@@ -9,6 +10,7 @@ import { FirstPersonControls } from "three/addons/controls/FirstPersonControls.j
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { Water } from "three/addons/objects/Water.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { User } from "./user.js"
 
 let camera, controls, scene, renderer;
 let mouseX = 0,
@@ -30,9 +32,19 @@ const listener = new THREE.AudioListener()
 const audioLoader = new THREE.AudioLoader()
 const bgm = new THREE.Audio(listener)
 
+let user
+
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
 animate();
+
+function makeSocketUser() {
+  socket = io();
+  io.connect()
+  socket.on('connect', () => {
+    user = new User(camera.position.x, camera.position.y, camera.position.z-20, scene, socket.id)
+  })
+}
 
 function loadBGM() {
   audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
@@ -149,7 +161,7 @@ function loadModel(url) {
   });
 }
 
-function init() {
+async function init() {
   scene = new THREE.Scene();
   //   scene.background = new THREE.Color(0xcccccc);
   //   scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
@@ -168,7 +180,6 @@ function init() {
   camera.position.set(0, 20, 400);
   camera.add(listener)
   // controls
-
   controls = new FirstPersonControls(camera, renderer.domElement);
      //controls = new OrbitControls(camera, renderer.domElement);
 
@@ -270,14 +281,14 @@ function init() {
   document.addEventListener('click', () => {
     shouldAutoForward = !shouldAutoForward
     if (!contextResume) {
-      context.resume().then(() => bgm.play())
+      //context.resume().then(() => bgm.play())
       contextResume = true
     }
   })
   document.getElementById('close_modal').addEventListener('click', () => {
     document.getElementById('instruction_modal').style.display = 'none'
   })
-
+  await makeSocketUser()
 }
 
 function onWindowResize() {
@@ -298,14 +309,18 @@ function animate() {
   //console.log('camera', camera.position)
   controls.autoForward = shouldAutoForward
 
- 
-  
+  //console.log('camera position',camera.position)
+  //console.log('control', controls.object.position)
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
-
+  //cube.position.set(camera.position.x,camera.position.y, camera.position.z - 20)
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
   //camera.position.z -= 1//= - position + 8000;
+  if (user) {
+    user.update(camera.position.x, camera.position.y, camera.position.z)
+  }
+
   render();
 }
 
