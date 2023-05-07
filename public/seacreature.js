@@ -99,7 +99,7 @@ export class SeaCreature {
 
         setInterval(() => {
           console.log(`this.dummy.position.y: ${this.dummy.position.y}`);
-          console.log(`this.position: ${this.initialPosition[0].y}`);
+          console.log(`this.initialpositionY: ${this.initialPosition[0].y}`);
           console.log(`this.direction: ${this.direction[0]}`);
         }, 20000);
       })
