@@ -316,6 +316,7 @@ async function init() {
     }
   })
 
+
   document.getElementById('close_modal').addEventListener('click', () => {
     document.getElementById('instruction_modal').style.display = 'none'
   })
@@ -346,10 +347,16 @@ function animate() {
   //console.log('control', controls.object.position)
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
+
+  const now = Date.now() / 1000;
+  // jellyfish.update(now, 0.1, 0, 0, 0, 0, 0);
+  jellyfish.update(now, "rotate");
+  squid.update(now, "bob");
+  // no starfish update!
+
   //cube.position.set(camera.position.x,camera.position.y, camera.position.z - 20)
 
 
-  jellyfish.update(0.1, 0, 0, 0, 0, 0);
 
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
@@ -365,10 +372,4 @@ function render() {
   const delta = clock.getDelta();
   controls.update(delta);
   renderer.render(scene, camera);
-}
-
-function getRandom(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
 }
