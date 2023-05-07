@@ -273,11 +273,9 @@ function init() {
     shouldAutoForward = !shouldAutoForward;
   });
 
-  document.getElementById('close_modal').addEventListener('click', () => {
-    document.getElementById('instruction_modal').style.display = 'none'
-  })
-
-
+  document.getElementById("close_modal").addEventListener("click", () => {
+    document.getElementById("instruction_modal").style.display = "none";
+  });
 }
 
 function onWindowResize() {
@@ -300,8 +298,10 @@ function animate() {
 
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
-
-  jellyfish.update(0.1, 0, 0, 0, 0, 0);
+  const now = Date.now() / 1000;
+  jellyfish.update(now, 0.1, 0, 0, 0, 0, 0);
+  // squid.update(now, 0.1, 0, 0, 0, 0, 0);
+  // no starfish update!
 
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;

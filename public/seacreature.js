@@ -143,7 +143,15 @@ export class SeaCreature {
       });
   }
 
-  update(posXq = 0, posYq = 0, posZq = 0, rotXq = 0, rotYq = 0, rotZq = 0) {
+  update(
+    time,
+    posXq = 0,
+    posYq = 0,
+    posZq = 0,
+    rotXq = 0,
+    rotYq = 0,
+    rotZq = 0
+  ) {
     const matrix = new THREE.Matrix4();
 
     if (this.instancesLoaded) {
@@ -155,19 +163,13 @@ export class SeaCreature {
           this.dummy.scale
         );
 
-        // const speedQuotient = 0.005;
-        this.dummy.position.x +=
-          Math.random() * /* this.getRandomSign() * */ posXq;
-        this.dummy.position.y +=
-          Math.random() * /* this.getRandomSign() * */ posYq;
-        this.dummy.position.z +=
-          Math.random() * /* this.getRandomSign() * */ posZq;
-        this.dummy.rotation.x +=
-          Math.random() * /* this.getRandomSign() * */ rotXq;
-        this.dummy.rotation.y +=
-          Math.random() * /* this.getRandomSign() * */ rotYq;
-        this.dummy.rotation.z +=
-          Math.random() * /* this.getRandomSign() * */ rotZq;
+        this.dummy.position.x += Math.random() * posXq;
+        this.dummy.position.y += Math.random() * posYq;
+        this.dummy.position.z += Math.random() * posZq;
+
+        this.dummy.rotation.x += Math.random() * rotXq;
+        this.dummy.rotation.y += Math.random() * rotYq;
+        this.dummy.rotation.z += Math.random() * rotZq;
 
         // setInterval(() => {
         //   console.log(this.dummy.rotation.z);
