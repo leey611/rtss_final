@@ -42,7 +42,7 @@ animate();
 
 function makeSocketUser() {
   socket = io();
-  io.connect()
+  //io.connect()
   socket.on('connect', () => {
     user = new User(camera.position.x, camera.position.y, camera.position.z-20, scene, socket.id)
   })
