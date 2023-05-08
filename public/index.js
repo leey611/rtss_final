@@ -42,9 +42,15 @@ function makeSocketUser() {
   socket = io();
 
   //io.connect()
-  socket.on('connect', () => {
-    user = new User(camera.position.x, camera.position.y, camera.position.z-20, scene, socket.id)
-  })
+  socket.on("connect", () => {
+    user = new User(
+      camera.position.x,
+      camera.position.y,
+      camera.position.z - 20,
+      scene,
+      socket.id
+    );
+  });
 }
 
 function loadBGM() {
@@ -58,8 +64,8 @@ function loadBGM() {
 function addWireframe() {
   const geometry = new THREE.SphereGeometry(1000, 100, 100);
   const material = new THREE.MeshBasicMaterial({
-    // color: 0xd3d3d3,
     side: THREE.BackSide,
+    color: 0x2d5d8f,
   });
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -68,17 +74,18 @@ function addWireframe() {
 
   const line = new THREE.LineSegments(wireframe);
   line.material.depthTest = false;
-  line.material.opacity = 0.5;
+  line.material.opacity = 0.75;
   line.material.transparent = false;
-  // line.material.color = 0x000000;
+  line.material.color = new THREE.Color(0xc2c1dc);
 
   scene.add(line);
 
   var params = {
-    fillColor: 0xd3d3d3,
-    lineColor: 0x000000,
+    fillColor: 0x2d5d8f,
+    lineColor: 0xc2c1dc,
   };
-
+  console.log(line.material.color);
+  console.log(material.color);
   const wireframeFolder = gui.addFolder("wireframe");
   wireframeFolder.add(line.material, "depthTest", "switch").name("depthTest");
   wireframeFolder
@@ -146,17 +153,10 @@ function addTerrain() {
 
 function addWater() {
   const waterSize = 500;
-  const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize);
+  const waterGeo = new THREE.CircleGeometry(waterSize);
+  // const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize);
   const waterMat = loadTexture("/assets/waternormals.jpg");
   waterMat.wrapS = waterMat.wrapT = THREE.RepeatWrapping;
-
-  const dummy = new THREE.Mesh(
-    waterGeo,
-    new THREE.MeshBasicMaterial({ color: 0x00ffe4, side: THREE.FrontSide })
-  );
-  scene.add(dummy);
-  dummy.position.set(0, 400, 0);
-  dummy.rotation.x = -Math.PI / 2;
 
   water = new Water(waterGeo, {
     textureWidth: 512,
@@ -167,7 +167,7 @@ function addWater() {
     distortionScale: 3.7,
   });
   water.rotation.x = Math.PI / 2;
-  water.position.set(0, 500, 0);
+  water.position.set(0, 850, 0);
   scene.add(water);
 
   const waterUniforms = water.material.uniforms;
@@ -176,7 +176,7 @@ function addWater() {
     .add(waterUniforms.distortionScale, "value", 0, 8, 0.1)
     .name("distortionScale");
   folderWater.add(waterUniforms.size, "value", 0.1, 10, 0.1).name("size");
-  folderWater.add(water.position, "y", 1, 1000).name("y position");
+  folderWater.add(water.position, "y", 1, 1000).name("water y pos");
   folderWater.open();
 }
 
@@ -209,13 +209,13 @@ async function init() {
     60,
     window.innerWidth / window.innerHeight,
     1,
-    1000
+    2000
   );
   camera.position.set(0, 20, 400);
   camera.add(listener);
   // controls
-  controls = new FirstPersonControls(camera, renderer.domElement);
-  //controls = new OrbitControls(camera, renderer.domElement);
+  // controls = new FirstPersonControls(camera, renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
 
   // controls = new FirstPersonControls(camera, renderer.domElement);
 
