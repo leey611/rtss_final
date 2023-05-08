@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { FlyControls } from "three/addons/controls/FlyControls.js";
 import { FirstPersonControls } from "three/addons/controls/FirstPersonControls.js";
-import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+// import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { Water } from "three/addons/objects/Water.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { User } from "./user.js";
@@ -21,22 +21,21 @@ let water, dLight, pLightParent;
 const pLights = [];
 let jellyfish, squid, starfish;
 const clock = new THREE.Clock();
-const gui = new GUI();
+// const gui = new GUI();
 let shouldAutoForward = false;
 
-let context
-let contextResume = false
-window.onload = function() {
-  context = new AudioContext()
-}
-const listener = new THREE.AudioListener()
-const audioLoader = new THREE.AudioLoader()
-const bgm = new THREE.Audio(listener)
-const collisionSound = new THREE.Audio(listener)
+let context;
+let contextResume = false;
+window.onload = function () {
+  context = new AudioContext();
+};
+const listener = new THREE.AudioListener();
+const audioLoader = new THREE.AudioLoader();
+const bgm = new THREE.Audio(listener);
+const collisionSound = new THREE.Audio(listener);
 
-let user
-let users = {}
-
+let user;
+let users = {};
 
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -44,48 +43,54 @@ animate();
 
 function makeSocketUser() {
   socket = io();
-  socket.on('connect', () => {
-    const { x, y, z } = camera.position
-    user = new User(camera.position.x, camera.position.y, camera.position.z, scene, socket.id)
-    socket.emit('addUser', { x, y, z, id: socket.id })
-  })
-  socket.on('exsisting', data => {
-    for(let userID in data) {
+  socket.on("connect", () => {
+    const { x, y, z } = camera.position;
+    user = new User(
+      camera.position.x,
+      camera.position.y,
+      camera.position.z,
+      scene,
+      socket.id
+    );
+    socket.emit("addUser", { x, y, z, id: socket.id });
+  });
+  socket.on("exsisting", (data) => {
+    for (let userID in data) {
       if (data[userID]) {
-        const { x, y, z, id } = data[userID]
-        users[userID] = new User(x, y, z, scene, id)
+        const { x, y, z, id } = data[userID];
+        users[userID] = new User(x, y, z, scene, id);
       }
     }
-    console.log('exsisting', users)
-  })
-  socket.on('updateUserPosition', data => {
+    console.log("exsisting", users);
+  });
+  socket.on("updateUserPosition", (data) => {
     //console.log('updateUserPosition', data)
-    const { x, y, z, id } = data
-    users[id].update(x, y, z)
-  })
-  socket.on('addUser', data => {
-    console.log('new user comes', data)
-    const { x, y, z, id } = data
-    users[data.id] = new User(x, y, z, scene, id)
-  })
-  socket.on('removeUser', data => {
-    console.log('user left ', data.id)
-    delete users[data.id]
-    console.log('users after one left', users)
-  })
+    const { x, y, z, id } = data;
+    users[id].update(x, y, z);
+  });
+  socket.on("addUser", (data) => {
+    console.log("new user comes", data);
+    const { x, y, z, id } = data;
+    users[data.id] = new User(x, y, z, scene, id);
+  });
+  socket.on("removeUser", (data) => {
+    console.log("user left ", data.id);
+    delete users[data.id];
+    console.log("users after one left", users);
+  });
 }
 
 function loadSounds() {
-  audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
-    bgm.setBuffer(buffer)
-    bgm.setLoop(true)
-    bgm.setVolume(0.5)
-  })
-  audioLoader.load('/assets/sounds/falling.mp3', buffer => {
-    collisionSound.setBuffer(buffer)
-    collisionSound.setLoop(false)
-    collisionSound.setVolume(1)
-  })
+  audioLoader.load("/assets/sounds/the_heavy_truth.mp3", (buffer) => {
+    bgm.setBuffer(buffer);
+    bgm.setLoop(true);
+    bgm.setVolume(0.5);
+  });
+  audioLoader.load("/assets/sounds/falling.mp3", (buffer) => {
+    collisionSound.setBuffer(buffer);
+    collisionSound.setLoop(false);
+    collisionSound.setVolume(1);
+  });
 }
 
 function addWireframe() {
@@ -114,25 +119,25 @@ function addWireframe() {
     lineColor: 0xc2c1dc,
   };
 
-  const wireframeFolder = gui.addFolder("wireframe");
-  wireframeFolder.add(line.material, "depthTest", "switch").name("depthTest");
-  wireframeFolder
-    .add(line.material, "transparent", "switch")
-    .name("transparent");
-  wireframeFolder
-    .addColor(params, "fillColor")
-    .name("fill color")
-    .onChange(() => {
-      material.color.set(params.fillColor);
-    });
-  wireframeFolder
-    .addColor(params, "lineColor")
-    .name("line color")
-    .onChange(() => {
-      line.material.color.set(params.lineColor);
-    });
+  // const wireframeFolder = gui.addFolder("wireframe");
+  // wireframeFolder.add(line.material, "depthTest", "switch").name("depthTest");
+  // wireframeFolder
+  //   .add(line.material, "transparent", "switch")
+  //   .name("transparent");
+  // wireframeFolder
+  //   .addColor(params, "fillColor")
+  //   .name("fill color")
+  //   .onChange(() => {
+  //     material.color.set(params.fillColor);
+  //   });
+  // wireframeFolder
+  //   .addColor(params, "lineColor")
+  //   .name("line color")
+  //   .onChange(() => {
+  //     line.material.color.set(params.lineColor);
+  //   });
 
-  wireframeFolder.open();
+  // wireframeFolder.open();
 }
 
 function loadTexture(url) {
@@ -164,14 +169,14 @@ function addTerrain() {
       const terrain = new THREE.Mesh(terraingeo, terrainmat);
       // terrain.receiveShadow = true;
       scene.add(terrain);
-      terrain.position.set(0, -50, 0);
+      terrain.position.set(0, -55, 0);
       terrain.rotateX(-Math.PI / 2);
 
-      const terrainFolder = gui.addFolder("terrain");
-      terrainFolder
-        .add(terrainmat, "displacementScale", 0, 100, 30)
-        .name("displacementScale");
-      terrainFolder.open();
+      // const terrainFolder = gui.addFolder("terrain");
+      // terrainFolder
+      //   .add(terrainmat, "displacementScale", 0, 100, 30)
+      //   .name("displacementScale");
+      // terrainFolder.open();
     })
     .catch((error) => {
       console.log(error);
@@ -197,14 +202,14 @@ function addWater() {
   water.position.set(0, 850, 0);
   scene.add(water);
 
-  const waterUniforms = water.material.uniforms;
-  const folderWater = gui.addFolder("water");
-  folderWater
-    .add(waterUniforms.distortionScale, "value", 0, 8, 0.1)
-    .name("distortionScale");
-  folderWater.add(waterUniforms.size, "value", 0.1, 10, 0.1).name("size");
-  folderWater.add(water.position, "y", 1, 1000).name("water y pos");
-  folderWater.open();
+  // const waterUniforms = water.material.uniforms;
+  // const folderWater = gui.addFolder("water");
+  // folderWater
+  //   .add(waterUniforms.distortionScale, "value", 0, 8, 0.1)
+  //   .name("distortionScale");
+  // folderWater.add(waterUniforms.size, "value", 0.1, 10, 0.1).name("size");
+  // folderWater.add(water.position, "y", 1, 1000).name("water y pos");
+  // folderWater.open();
 }
 
 function addDLight(color) {
@@ -221,12 +226,12 @@ function addDLight(color) {
   // var shadowHelper = new THREE.CameraHelper(dLight.shadow.camera);
   // scene.add(shadowHelper); // I don't think this even works bc apparently shadow helper uses orthographic positioning?
 
-  const dLightFolder = gui.addFolder("directional light");
-  dLightFolder.add(dLight, "intensity", 0, 10).name("intensity");
-  dLightFolder.add(dLight.position, "x", 0, 1500).name("x position");
-  dLightFolder.add(dLight.position, "y", 0, 1500).name("y position");
-  dLightFolder.add(dLight.position, "z", 0, 1500).name("z position");
-  dLightFolder.open();
+  // const dLightFolder = gui.addFolder("directional light");
+  // dLightFolder.add(dLight, "intensity", 0, 10).name("intensity");
+  // dLightFolder.add(dLight.position, "x", 0, 1500).name("x position");
+  // dLightFolder.add(dLight.position, "y", 0, 1500).name("y position");
+  // dLightFolder.add(dLight.position, "z", 0, 1500).name("z position");
+  // dLightFolder.open();
 }
 
 function animateDLight(time) {
@@ -241,6 +246,7 @@ function addPLights(color, amount, intensity, xPos = 0, yPos = 0, zPos = 0) {
     pLights[i] = new THREE.PointLight(color, intensity);
     scene.add(pLights[i]);
     pLights[i].position.set(xPos, yPos, zPos);
+    pLightParent.position.set(0, 0, 0);
 
     const pLhelper = new THREE.PointLightHelper(pLights[i], 100);
     pLightParent.add(pLhelper);
@@ -270,13 +276,17 @@ async function init() {
     2000
   );
 
-  camera.position.set(THREE.MathUtils.randFloat(0,10), 20, THREE.MathUtils.randFloat(380,400));
+  camera.position.set(
+    THREE.MathUtils.randFloat(0, 10),
+    20,
+    THREE.MathUtils.randFloat(380, 400)
+  );
 
-  camera.add(listener)
+  camera.add(listener);
 
   // controls
   controls = new FirstPersonControls(camera, renderer.domElement);
-  //controls = new OrbitControls(camera, renderer.domElement);
+  // controls = new OrbitControls(camera, renderer.domElement);
 
   // controls = new FirstPersonControls(camera, renderer.domElement);
 
@@ -309,11 +319,9 @@ async function init() {
   addTerrain();
   addWater();
 
-  loadSounds()
-
+  loadSounds();
 
   // addWater();
-
 
   // sea creatures
 
@@ -341,13 +349,20 @@ async function init() {
     2,
     0.5,
     1,
-    0
+    0 // starfish factor applied
   );
 
   // lights
 
   addDLight(0xffbd21);
-  addPLights(0xdb45de, 15, 0.5, Math.random() * 500, 0, Math.random() * 500);
+  addPLights(
+    0xdb45de,
+    15,
+    0.5,
+    THREE.MathUtils.randFloat(0, 10),
+    15,
+    THREE.MathUtils.randFloat(300, 400)
+  );
   // addPLights(
   //   0x006ff7,
   //   0.3,
@@ -367,18 +382,16 @@ async function init() {
   document.addEventListener("click", () => {
     shouldAutoForward = !shouldAutoForward;
     if (!contextResume) {
-      context.resume().then(() => bgm.play())
+      context.resume().then(() => bgm.play());
       contextResume = true;
     }
   });
-
 
   document.getElementById("close_modal").addEventListener("click", () => {
     document.getElementById("instruction_modal").style.display = "none";
   });
 
   await makeSocketUser();
-
 }
 
 function onWindowResize() {
@@ -417,20 +430,19 @@ function animate() {
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
   //camera.position.z -= 1//= - position + 8000;
   if (user) {
-    user.update(camera.position.x, camera.position.y, camera.position.z)
-    socket.emit('updateUserPosition', user)
-    checkCollisions()
+    user.update(camera.position.x, camera.position.y, camera.position.z);
+    socket.emit("updateUserPosition", user);
+    checkCollisions();
   }
-
 
   render();
 }
 
 function checkCollisions() {
-  for(let userID in users) {
+  for (let userID in users) {
     if (user.bounding.intersectsSphere(users[userID].bounding)) {
-      console.log('intersec')
-      collisionSound.play()
+      console.log("intersec");
+      collisionSound.play();
     } else {
       //console.log('noooooo')
     }
