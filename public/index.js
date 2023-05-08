@@ -17,11 +17,12 @@ let mouseX = 0,
 let start_time = Date.now();
 let windowHalfX = window.innerWidth / 2;
 let windowHalfY = window.innerHeight / 2;
-let water;
+let water, dLight, pLightParent;
+const pLights = [];
+let jellyfish, squid, starfish;
 const clock = new THREE.Clock();
 const gui = new GUI();
 let shouldAutoForward = false;
-let jellyfish, squid, starfish;
 
 let context;
 let contextResume = false;
@@ -65,7 +66,8 @@ function addWireframe() {
   const geometry = new THREE.SphereGeometry(1000, 100, 100);
   const material = new THREE.MeshBasicMaterial({
     side: THREE.BackSide,
-    color: 0x2d5d8f,
+    color: 0x1b181b,
+    // color: 0x2d5d8f,
   });
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -76,7 +78,8 @@ function addWireframe() {
   line.material.depthTest = false;
   line.material.opacity = 0.75;
   line.material.transparent = false;
-  line.material.color = new THREE.Color(0xc2c1dc);
+  line.material.color = new THREE.Color(0x352f34);
+  // line.material.color = new THREE.Color(0xc2c1dc);
 
   scene.add(line);
 
@@ -84,8 +87,7 @@ function addWireframe() {
     fillColor: 0x2d5d8f,
     lineColor: 0xc2c1dc,
   };
-  console.log(line.material.color);
-  console.log(material.color);
+
   const wireframeFolder = gui.addFolder("wireframe");
   wireframeFolder.add(line.material, "depthTest", "switch").name("depthTest");
   wireframeFolder
@@ -134,12 +136,11 @@ function addTerrain() {
         // normalScale: new THREE.Vector2(0.1, 0.1),
       });
       const terrain = new THREE.Mesh(terraingeo, terrainmat);
+      // terrain.receiveShadow = true;
       scene.add(terrain);
       terrain.position.set(0, -50, 0);
       terrain.rotateX(-Math.PI / 2);
 
-      //   const terrainmatUniforms = terrainmat.uniforms;
-      //   console.log(terrainmatUniforms);
       const terrainFolder = gui.addFolder("terrain");
       terrainFolder
         .add(terrainmat, "displacementScale", 0, 100, 30)
@@ -171,7 +172,7 @@ function addWater() {
   scene.add(water);
 
   const waterUniforms = water.material.uniforms;
-  const folderWater = gui.addFolder("Water");
+  const folderWater = gui.addFolder("water");
   folderWater
     .add(waterUniforms.distortionScale, "value", 0, 8, 0.1)
     .name("distortionScale");
@@ -180,19 +181,49 @@ function addWater() {
   folderWater.open();
 }
 
-function loadModel(url) {
-  return new Promise((resolve, reject) => {
-    new GLTFLoader().load(
-      url,
-      (gltf) => {
-        resolve(gltf.scene);
-      },
-      undefined,
-      (error) => {
-        reject(error);
-      }
-    );
-  });
+function addDLight(color) {
+  dLight = new THREE.DirectionalLight(color, 2);
+  dLight.position.set(0, 470, 0);
+  // dLight.shadow.mapSize.width = 1024;
+  // dLight.shadow.camera.near = 1;
+  // dLight.shadow.camera.far = 500;
+  scene.add(dLight);
+
+  var helper = new THREE.DirectionalLightHelper(dLight);
+  // scene.add(helper);
+
+  // var shadowHelper = new THREE.CameraHelper(dLight.shadow.camera);
+  // scene.add(shadowHelper); // I don't think this even works bc apparently shadow helper uses orthographic positioning?
+
+  const dLightFolder = gui.addFolder("directional light");
+  dLightFolder.add(dLight, "intensity", 0, 10).name("intensity");
+  dLightFolder.add(dLight.position, "x", 0, 1500).name("x position");
+  dLightFolder.add(dLight.position, "y", 0, 1500).name("y position");
+  dLightFolder.add(dLight.position, "z", 0, 1500).name("z position");
+  dLightFolder.open();
+}
+
+function animateDLight(time) {
+  dLight.intensity = Math.sin(time * 0.0001) * 1 + 1;
+  // dLight.intensity = Math.sin(time * 0.0001) * 0.5 + (1 + 0.5);
+  dLight.position.z = Math.sin(time * 0.0005) * 500;
+}
+
+function addPLights(color, amount, intensity, xPos = 0, yPos = 0, zPos = 0) {
+  for (let i = 0; i < amount; i++) {
+    pLightParent = new THREE.Object3D();
+    pLights[i] = new THREE.PointLight(color, intensity);
+    scene.add(pLights[i]);
+    pLights[i].position.set(xPos, yPos, zPos);
+
+    const pLhelper = new THREE.PointLightHelper(pLights[i], 100);
+    pLightParent.add(pLhelper);
+  }
+}
+
+function animatePLights(time) {
+  pLightParent.position.x += Math.cos(time * 0.005);
+  pLightParent.position.z += -Math.sin(time * 0.005);
 }
 
 async function init() {
@@ -203,6 +234,7 @@ async function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
+  // renderer.shadowMap.enabled = true;
   document.body.appendChild(renderer.domElement);
 
   camera = new THREE.PerspectiveCamera(
@@ -246,12 +278,9 @@ async function init() {
 
   addWireframe();
   addTerrain();
-
   addWater();
 
   loadBGM();
-
-  // addWater();
 
   // sea creatures
 
@@ -259,7 +288,7 @@ async function init() {
     scene,
     "/assets/models/jellyfish.glb",
     "Object_6",
-    100
+    50
   );
   jellyfish.init(750, 2, 2, 2, 1, 20);
 
@@ -284,20 +313,15 @@ async function init() {
 
   // lights
 
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 2);
-  dirLight1.position.set(0, 470, 0);
-  scene.add(dirLight1);
-
-  //   const dirLight2 = new THREE.DirectionalLight(0x002288);
-  //   dirLight2.position.set(-50, -800, -50);
-  //   scene.add(dirLight2);
-
-  const dirLightFolder = gui.addFolder("directional light");
-  dirLightFolder.add(dirLight1, "intensity", 0, 10).name("intensity");
-  dirLightFolder.add(dirLight1.position, "x", 0, 1500).name("x position");
-  dirLightFolder.add(dirLight1.position, "y", 0, 1500).name("y position");
-  dirLightFolder.add(dirLight1.position, "z", 0, 1500).name("z position");
-  dirLightFolder.open();
+  addDLight(0xffbd21);
+  addPLights(0xdb45de, 15, 0.5, Math.random() * 500, 0, Math.random() * 500);
+  // addPLights(
+  //   0x006ff7,
+  //   0.3,
+  //   Math.random() * 500,
+  //   Math.random() * 200 + 200,
+  //   Math.random() * 500
+  // );
 
   const ambientLight = new THREE.AmbientLight(0x222222);
   scene.add(ambientLight);
@@ -348,6 +372,9 @@ function animate() {
   const now = Date.now();
   jellyfish.update(now, "rotate");
   squid.update(now, "bob");
+
+  animateDLight(now);
+  animatePLights(now);
 
   //cube.position.set(camera.position.x,camera.position.y, camera.position.z - 20)
 
