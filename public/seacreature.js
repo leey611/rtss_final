@@ -61,6 +61,7 @@ export class SeaCreature {
         const geo = origMesh.geometry.clone();
         const mat = origMesh.material;
         this.mesh = new THREE.InstancedMesh(geo, mat, this.amount);
+        // this.mesh.castShadow = true;
         this.parent.add(this.mesh);
         this.scene.add(this.parent);
 
