@@ -22,19 +22,27 @@ io.on("connection", (socket) => {
     "Someone joined our server using socket.io.  Their socket id is",
     socket.id
   );
-
-  peers[socket.id] = {};
+  socket.emit('exsisting', peers)
+  //peers[socket.id] = {};
 
   console.log("Current peers:", peers);
 
-//   socket.on("msg", (data) => {
-//     console.log("Got message from client with id ", socket.id, ":", data);
-//     let messageWithId = { from: socket.id, data: data };
-//     socket.broadcast.emit("msg", messageWithId);
-//   });
+  socket.on('addUser', data => {
+    console.log('server addUser')
+    peers[socket.id] = data
+    socket.broadcast.emit('addUser', data)
+  })
+  socket.on('updateUserPosition', data => {
+    //console.log('updateUserPosition', data)
+    
+    peers[data.id] = data
+
+    socket.broadcast.emit('updateUserPosition', data)
+  })
 
   socket.on("disconnect", () => {
     console.log("Someone with ID", socket.id, "left the server");
     delete peers[socket.id];
+    socket.broadcast.emit('removeUser', { id: socket.id })
   });
 });
