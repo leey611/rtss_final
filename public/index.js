@@ -35,6 +35,7 @@ const audioLoader = new THREE.AudioLoader()
 const bgm = new THREE.Audio(listener)
 
 let user
+let users = {}
 
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -42,9 +43,34 @@ animate();
 
 function makeSocketUser() {
   socket = io();
-  //io.connect()
   socket.on('connect', () => {
-    user = new User(camera.position.x, camera.position.y, camera.position.z-20, scene, socket.id)
+    const { x, y, z } = camera.position
+    user = new User(camera.position.x, camera.position.y, camera.position.z, scene, socket.id)
+    socket.emit('addUser', { x, y, z, id: socket.id })
+  })
+  socket.on('exsisting', data => {
+    for(let userID in data) {
+      if (data[userID]) {
+        const { x, y, z, id } = data[userID]
+        users[userID] = new User(x, y, z, scene, id)
+      }
+    }
+    console.log('exsisting', users)
+  })
+  socket.on('updateUserPosition', data => {
+    //console.log('updateUserPosition', data)
+    const { x, y, z, id } = data
+    users[id].update(x, y, z)
+  })
+  socket.on('addUser', data => {
+    console.log('new user comes', data)
+    const { x, y, z, id } = data
+    users[data.id] = new User(x, y, z, scene, id)
+  })
+  socket.on('removeUser', data => {
+    console.log('user left ', data.id)
+    delete users[data.id]
+    console.log('users after one left', users)
   })
 }
 
@@ -212,7 +238,7 @@ async function init() {
     1,
     1000
   );
-  camera.position.set(0, 20, 400);
+  camera.position.set(THREE.MathUtils.randFloat(10,40), 20, THREE.MathUtils.randFloat(380,400));
   camera.add(listener)
   // controls
   controls = new FirstPersonControls(camera, renderer.domElement);
@@ -322,7 +348,7 @@ async function init() {
   })
 
   await makeSocketUser()
-
+  
 }
 
 function onWindowResize() {
@@ -363,7 +389,9 @@ function animate() {
   //camera.position.z -= 1//= - position + 8000;
   if (user) {
     user.update(camera.position.x, camera.position.y, camera.position.z)
+    socket.emit('updateUserPosition', user)
   }
+
 
   render();
 }
