@@ -275,8 +275,8 @@ async function init() {
   camera.add(listener)
 
   // controls
-  // controls = new FirstPersonControls(camera, renderer.domElement);
-  controls = new OrbitControls(camera, renderer.domElement);
+  controls = new FirstPersonControls(camera, renderer.domElement);
+  //controls = new OrbitControls(camera, renderer.domElement);
 
   // controls = new FirstPersonControls(camera, renderer.domElement);
 
@@ -367,7 +367,7 @@ async function init() {
   document.addEventListener("click", () => {
     shouldAutoForward = !shouldAutoForward;
     if (!contextResume) {
-      //context.resume().then(() => bgm.play())
+      context.resume().then(() => bgm.play())
       contextResume = true;
     }
   });
