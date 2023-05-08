@@ -24,6 +24,17 @@ const clock = new THREE.Clock();
 const gui = new GUI();
 let shouldAutoForward = false;
 
+<<<<<<< HEAD
+let context
+let contextResume = false
+window.onload = function() {
+  context = new AudioContext()
+}
+const listener = new THREE.AudioListener()
+const audioLoader = new THREE.AudioLoader()
+const bgm = new THREE.Audio(listener)
+const collisionSound = new THREE.Audio(listener)
+=======
 let context;
 let contextResume = false;
 window.onload = function () {
@@ -32,6 +43,7 @@ window.onload = function () {
 const listener = new THREE.AudioListener();
 const audioLoader = new THREE.AudioLoader();
 const bgm = new THREE.Audio(listener);
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
 
 let user
 let users = {}
@@ -74,12 +86,26 @@ function makeSocketUser() {
   })
 }
 
+<<<<<<< HEAD
+function loadSounds() {
+  audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
+    bgm.setBuffer(buffer)
+    bgm.setLoop(true)
+    bgm.setVolume(0.5)
+  })
+  audioLoader.load('/assets/sounds/falling.mp3', buffer => {
+    collisionSound.setBuffer(buffer)
+    collisionSound.setLoop(false)
+    collisionSound.setVolume(1)
+  })
+=======
 function loadBGM() {
   audioLoader.load("/assets/sounds/the_heavy_truth.mp3", (buffer) => {
     bgm.setBuffer(buffer);
     bgm.setLoop(true);
     bgm.setVolume(0.5);
   });
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
 }
 
 function addWireframe() {
@@ -263,8 +289,12 @@ async function init() {
     1,
     2000
   );
+<<<<<<< HEAD
+  camera.position.set(THREE.MathUtils.randFloat(0,10), 20, THREE.MathUtils.randFloat(380,400));
+=======
 
   camera.position.set(THREE.MathUtils.randFloat(10,40), 20, THREE.MathUtils.randFloat(380,400));
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
   camera.add(listener)
 
   // controls
@@ -302,7 +332,14 @@ async function init() {
   addTerrain();
   addWater();
 
+<<<<<<< HEAD
+  loadSounds()
+
+
+  // addWater();
+=======
   loadBGM();
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
 
   // sea creatures
 
@@ -408,10 +445,22 @@ function animate() {
   if (user) {
     user.update(camera.position.x, camera.position.y, camera.position.z)
     socket.emit('updateUserPosition', user)
+    checkCollisions()
   }
 
 
   render();
+}
+
+function checkCollisions() {
+  for(let userID in users) {
+    if (user.bounding.intersectsSphere(users[userID].bounding)) {
+      console.log('intersec')
+      collisionSound.play()
+    } else {
+      //console.log('noooooo')
+    }
+  }
 }
 
 function render() {
