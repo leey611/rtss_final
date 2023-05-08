@@ -1,6 +1,4 @@
-let socket
-
-
+let socket;
 
 import * as THREE from "three";
 
@@ -10,7 +8,7 @@ import { FirstPersonControls } from "three/addons/controls/FirstPersonControls.j
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { Water } from "three/addons/objects/Water.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { User } from "./user.js"
+import { User } from "./user.js";
 import { SeaCreature } from "/seacreature.js";
 
 let camera, controls, scene, renderer;
@@ -19,12 +17,14 @@ let mouseX = 0,
 let start_time = Date.now();
 let windowHalfX = window.innerWidth / 2;
 let windowHalfY = window.innerHeight / 2;
-let water;
+let water, dLight, pLightParent;
+const pLights = [];
+let jellyfish, squid, starfish;
 const clock = new THREE.Clock();
 const gui = new GUI();
 let shouldAutoForward = false;
-let jellyfish, squid, starfish;
 
+<<<<<<< HEAD
 let context
 let contextResume = false
 window.onload = function() {
@@ -34,9 +34,20 @@ const listener = new THREE.AudioListener()
 const audioLoader = new THREE.AudioLoader()
 const bgm = new THREE.Audio(listener)
 const collisionSound = new THREE.Audio(listener)
+=======
+let context;
+let contextResume = false;
+window.onload = function () {
+  context = new AudioContext();
+};
+const listener = new THREE.AudioListener();
+const audioLoader = new THREE.AudioLoader();
+const bgm = new THREE.Audio(listener);
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
 
 let user
 let users = {}
+
 
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -75,6 +86,7 @@ function makeSocketUser() {
   })
 }
 
+<<<<<<< HEAD
 function loadSounds() {
   audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
     bgm.setBuffer(buffer)
@@ -86,13 +98,22 @@ function loadSounds() {
     collisionSound.setLoop(false)
     collisionSound.setVolume(1)
   })
+=======
+function loadBGM() {
+  audioLoader.load("/assets/sounds/the_heavy_truth.mp3", (buffer) => {
+    bgm.setBuffer(buffer);
+    bgm.setLoop(true);
+    bgm.setVolume(0.5);
+  });
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
 }
 
 function addWireframe() {
   const geometry = new THREE.SphereGeometry(1000, 100, 100);
   const material = new THREE.MeshBasicMaterial({
-    // color: 0xd3d3d3,
     side: THREE.BackSide,
+    color: 0x1b181b,
+    // color: 0x2d5d8f,
   });
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -101,15 +122,16 @@ function addWireframe() {
 
   const line = new THREE.LineSegments(wireframe);
   line.material.depthTest = false;
-  line.material.opacity = 0.5;
+  line.material.opacity = 0.75;
   line.material.transparent = false;
-  // line.material.color = 0x000000;
+  line.material.color = new THREE.Color(0x352f34);
+  // line.material.color = new THREE.Color(0xc2c1dc);
 
   scene.add(line);
 
   var params = {
-    fillColor: 0xd3d3d3,
-    lineColor: 0x000000,
+    fillColor: 0x2d5d8f,
+    lineColor: 0xc2c1dc,
   };
 
   const wireframeFolder = gui.addFolder("wireframe");
@@ -160,12 +182,11 @@ function addTerrain() {
         // normalScale: new THREE.Vector2(0.1, 0.1),
       });
       const terrain = new THREE.Mesh(terraingeo, terrainmat);
+      // terrain.receiveShadow = true;
       scene.add(terrain);
       terrain.position.set(0, -50, 0);
       terrain.rotateX(-Math.PI / 2);
 
-      //   const terrainmatUniforms = terrainmat.uniforms;
-      //   console.log(terrainmatUniforms);
       const terrainFolder = gui.addFolder("terrain");
       terrainFolder
         .add(terrainmat, "displacementScale", 0, 100, 30)
@@ -179,17 +200,10 @@ function addTerrain() {
 
 function addWater() {
   const waterSize = 500;
-  const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize);
+  const waterGeo = new THREE.CircleGeometry(waterSize);
+  // const waterGeo = new THREE.PlaneGeometry(waterSize, waterSize);
   const waterMat = loadTexture("/assets/waternormals.jpg");
   waterMat.wrapS = waterMat.wrapT = THREE.RepeatWrapping;
-
-  const dummy = new THREE.Mesh(
-    waterGeo,
-    new THREE.MeshBasicMaterial({ color: 0x00ffe4, side: THREE.FrontSide })
-  );
-  scene.add(dummy);
-  dummy.position.set(0, 400, 0);
-  dummy.rotation.x = -Math.PI / 2;
 
   water = new Water(waterGeo, {
     textureWidth: 512,
@@ -200,32 +214,62 @@ function addWater() {
     distortionScale: 3.7,
   });
   water.rotation.x = Math.PI / 2;
-  water.position.set(0, 500, 0);
+  water.position.set(0, 850, 0);
   scene.add(water);
 
   const waterUniforms = water.material.uniforms;
-  const folderWater = gui.addFolder("Water");
+  const folderWater = gui.addFolder("water");
   folderWater
     .add(waterUniforms.distortionScale, "value", 0, 8, 0.1)
     .name("distortionScale");
   folderWater.add(waterUniforms.size, "value", 0.1, 10, 0.1).name("size");
-  folderWater.add(water.position, "y", 1, 1000).name("y position");
+  folderWater.add(water.position, "y", 1, 1000).name("water y pos");
   folderWater.open();
 }
 
-function loadModel(url) {
-  return new Promise((resolve, reject) => {
-    new GLTFLoader().load(
-      url,
-      (gltf) => {
-        resolve(gltf.scene);
-      },
-      undefined,
-      (error) => {
-        reject(error);
-      }
-    );
-  });
+function addDLight(color) {
+  dLight = new THREE.DirectionalLight(color, 2);
+  dLight.position.set(0, 470, 0);
+  // dLight.shadow.mapSize.width = 1024;
+  // dLight.shadow.camera.near = 1;
+  // dLight.shadow.camera.far = 500;
+  scene.add(dLight);
+
+  var helper = new THREE.DirectionalLightHelper(dLight);
+  // scene.add(helper);
+
+  // var shadowHelper = new THREE.CameraHelper(dLight.shadow.camera);
+  // scene.add(shadowHelper); // I don't think this even works bc apparently shadow helper uses orthographic positioning?
+
+  const dLightFolder = gui.addFolder("directional light");
+  dLightFolder.add(dLight, "intensity", 0, 10).name("intensity");
+  dLightFolder.add(dLight.position, "x", 0, 1500).name("x position");
+  dLightFolder.add(dLight.position, "y", 0, 1500).name("y position");
+  dLightFolder.add(dLight.position, "z", 0, 1500).name("z position");
+  dLightFolder.open();
+}
+
+function animateDLight(time) {
+  dLight.intensity = Math.sin(time * 0.0001) * 1 + 1;
+  // dLight.intensity = Math.sin(time * 0.0001) * 0.5 + (1 + 0.5);
+  dLight.position.z = Math.sin(time * 0.0005) * 500;
+}
+
+function addPLights(color, amount, intensity, xPos = 0, yPos = 0, zPos = 0) {
+  for (let i = 0; i < amount; i++) {
+    pLightParent = new THREE.Object3D();
+    pLights[i] = new THREE.PointLight(color, intensity);
+    scene.add(pLights[i]);
+    pLights[i].position.set(xPos, yPos, zPos);
+
+    const pLhelper = new THREE.PointLightHelper(pLights[i], 100);
+    pLightParent.add(pLhelper);
+  }
+}
+
+function animatePLights(time) {
+  pLightParent.position.x += Math.cos(time * 0.005);
+  pLightParent.position.z += -Math.sin(time * 0.005);
 }
 
 async function init() {
@@ -236,19 +280,26 @@ async function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
+  // renderer.shadowMap.enabled = true;
   document.body.appendChild(renderer.domElement);
 
   camera = new THREE.PerspectiveCamera(
     60,
     window.innerWidth / window.innerHeight,
     1,
-    1000
+    2000
   );
+<<<<<<< HEAD
   camera.position.set(THREE.MathUtils.randFloat(0,10), 20, THREE.MathUtils.randFloat(380,400));
+=======
+
+  camera.position.set(THREE.MathUtils.randFloat(10,40), 20, THREE.MathUtils.randFloat(380,400));
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
   camera.add(listener)
+
   // controls
-  controls = new FirstPersonControls(camera, renderer.domElement);
-     //controls = new OrbitControls(camera, renderer.domElement);
+  // controls = new FirstPersonControls(camera, renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
 
   // controls = new FirstPersonControls(camera, renderer.domElement);
 
@@ -279,13 +330,16 @@ async function init() {
 
   addWireframe();
   addTerrain();
-
   addWater();
 
+<<<<<<< HEAD
   loadSounds()
 
 
   // addWater();
+=======
+  loadBGM();
+>>>>>>> 02d99f29200ae618a3462743d390401ca50b614c
 
   // sea creatures
 
@@ -293,14 +347,11 @@ async function init() {
     scene,
     "/assets/models/jellyfish.glb",
     "Object_6",
-    100
+    50
   );
-  // jellyfish.init(-500, 500, -500, 500, -500, 500, 2, 2, 2, 1, 20);
-  // jellyfish.init(500, Math.PI * 2, 2, 2, 2, 1, 20);
   jellyfish.init(750, 2, 2, 2, 1, 20);
 
   squid = new SeaCreature(scene, "/assets/models/squid.glb", "Object_4", 100);
-  // squid.init(-500, 500, -500, 500, -500, 500, 2, 2, 2, 1, 10);
   squid.init(750, 2, 2, 2, 1, 10);
 
   starfish = new SeaCreature(
@@ -309,28 +360,27 @@ async function init() {
     "Object_2",
     25
   );
-  // starfish.init(-500, 500, 0, 10, -500, 500, -0.5, 0, 2, 0.5, 1);
-  starfish.init(750, -0.5, 0, 2, 0.5, 1);
-
-
-
+  starfish.init(
+    750,
+    -Math.PI / 2 / Math.PI, // as close to Math.PI/2 as possible
+    0.5 / Math.PI, // as close to 0 as possible
+    2,
+    0.5,
+    1,
+    0
+  );
 
   // lights
 
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 2);
-  dirLight1.position.set(0, 470, 0);
-  scene.add(dirLight1);
-
-  //   const dirLight2 = new THREE.DirectionalLight(0x002288);
-  //   dirLight2.position.set(-50, -800, -50);
-  //   scene.add(dirLight2);
-
-  const dirLightFolder = gui.addFolder("directional light");
-  dirLightFolder.add(dirLight1, "intensity", 0, 10).name("intensity");
-  dirLightFolder.add(dirLight1.position, "x", 0, 1500).name("x position");
-  dirLightFolder.add(dirLight1.position, "y", 0, 1500).name("y position");
-  dirLightFolder.add(dirLight1.position, "z", 0, 1500).name("z position");
-  dirLightFolder.open();
+  addDLight(0xffbd21);
+  addPLights(0xdb45de, 15, 0.5, Math.random() * 500, 0, Math.random() * 500);
+  // addPLights(
+  //   0x006ff7,
+  //   0.3,
+  //   Math.random() * 500,
+  //   Math.random() * 200 + 200,
+  //   Math.random() * 500
+  // );
 
   const ambientLight = new THREE.AmbientLight(0x222222);
   scene.add(ambientLight);
@@ -340,21 +390,21 @@ async function init() {
   window.addEventListener("resize", onWindowResize);
   document.addEventListener("mousemove", onDocumentMouseMove, false);
 
-  document.addEventListener('click', () => {
-    shouldAutoForward = !shouldAutoForward
+  document.addEventListener("click", () => {
+    shouldAutoForward = !shouldAutoForward;
     if (!contextResume) {
       //context.resume().then(() => bgm.play())
-      contextResume = true
+      contextResume = true;
     }
-  })
+  });
 
 
-  document.getElementById('close_modal').addEventListener('click', () => {
-    document.getElementById('instruction_modal').style.display = 'none'
-  })
+  document.getElementById("close_modal").addEventListener("click", () => {
+    document.getElementById("instruction_modal").style.display = "none";
+  });
 
-  await makeSocketUser()
-  
+  await makeSocketUser();
+
 }
 
 function onWindowResize() {
@@ -380,15 +430,14 @@ function animate() {
   //controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   let position = ((Date.now() - start_time) * 0.03) % 8000;
 
-  const now = Date.now() / 1000;
-  // jellyfish.update(now, 0.1, 0, 0, 0, 0, 0);
+  const now = Date.now();
   jellyfish.update(now, "rotate");
   squid.update(now, "bob");
-  // no starfish update!
+
+  animateDLight(now);
+  animatePLights(now);
 
   //cube.position.set(camera.position.x,camera.position.y, camera.position.z - 20)
-
-
 
   //camera.position.x += (  mouseX - camera.position.x ) * 0.01;
   //camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
