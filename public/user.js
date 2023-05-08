@@ -10,13 +10,16 @@ export class User {
         const material = new THREE.MeshStandardMaterial( { color: 0xffff00, transparent: true, opacity: 0.8 } ); 
         this.mesh = new THREE.Mesh( geometry, material );
         this.mesh.position.set(x,y,z)
+        this.bounding = new THREE.Sphere(this.mesh.position, 1)
         scene.add(this.mesh)
+        console.log('bounding', this.bounding)
     }
     update(x,y,z) {
         this.mesh.position.set(x,y,z)
         this.x = x
         this.y = y
         this.z = z
+        this.bounding = new THREE.Sphere(this.mesh.position, 1)
     }
 
 }

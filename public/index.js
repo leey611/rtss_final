@@ -33,6 +33,7 @@ window.onload = function() {
 const listener = new THREE.AudioListener()
 const audioLoader = new THREE.AudioLoader()
 const bgm = new THREE.Audio(listener)
+const collisionSound = new THREE.Audio(listener)
 
 let user
 let users = {}
@@ -74,11 +75,16 @@ function makeSocketUser() {
   })
 }
 
-function loadBGM() {
+function loadSounds() {
   audioLoader.load('/assets/sounds/the_heavy_truth.mp3', buffer => {
     bgm.setBuffer(buffer)
     bgm.setLoop(true)
     bgm.setVolume(0.5)
+  })
+  audioLoader.load('/assets/sounds/falling.mp3', buffer => {
+    collisionSound.setBuffer(buffer)
+    collisionSound.setLoop(false)
+    collisionSound.setVolume(1)
   })
 }
 
@@ -238,7 +244,7 @@ async function init() {
     1,
     1000
   );
-  camera.position.set(THREE.MathUtils.randFloat(10,40), 20, THREE.MathUtils.randFloat(380,400));
+  camera.position.set(THREE.MathUtils.randFloat(0,10), 20, THREE.MathUtils.randFloat(380,400));
   camera.add(listener)
   // controls
   controls = new FirstPersonControls(camera, renderer.domElement);
@@ -276,7 +282,7 @@ async function init() {
 
   addWater();
 
-  loadBGM()
+  loadSounds()
 
 
   // addWater();
@@ -390,10 +396,22 @@ function animate() {
   if (user) {
     user.update(camera.position.x, camera.position.y, camera.position.z)
     socket.emit('updateUserPosition', user)
+    checkCollisions()
   }
 
 
   render();
+}
+
+function checkCollisions() {
+  for(let userID in users) {
+    if (user.bounding.intersectsSphere(users[userID].bounding)) {
+      console.log('intersec')
+      collisionSound.play()
+    } else {
+      //console.log('noooooo')
+    }
+  }
 }
 
 function render() {
